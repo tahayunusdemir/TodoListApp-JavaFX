@@ -1,0 +1,39 @@
+# NetBeans specific
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+.nb-gradle/
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Java
+состоящий/
+lib/
+
+# Files built by Visual Studio Code
+.vscode/
+
+# Java package files
+*.jar
+*.war
+*.ear
+
+# Mac specific
+.DS_Store
+
+# User-specific files
+tasks.csv 
+# If you want to commit a sample tasks.csv, remove the line above
+# or add a specific sample file like tasks.example.csv to git
+# and keep tasks.csv in .gitignore for user-specific data. 
