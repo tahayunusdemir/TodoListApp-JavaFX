@@ -14,6 +14,8 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.layout.BorderPane;
 import todolistapp.model.TodoItem;
 import todolistapp.model.TodoListManager;
@@ -22,6 +24,9 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.CheckBox;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.util.converter.LocalDateStringConverter;
 
 
 public class MainViewController implements Initializable {
@@ -59,7 +64,8 @@ public class MainViewController implements Initializable {
     @FXML
     private TableColumn<TodoItem, LocalDate> creationDateColumn;
 
-    // Optional: @FXML private TableColumn<TodoItem, Void> actionsColumn;
+    @FXML
+    private TableColumn<TodoItem, Void> actionsColumn;
     
     @FXML
     private ComboBox<String> filterComboBox;
@@ -82,12 +88,36 @@ public class MainViewController implements Initializable {
         priorityComboBox.getItems().setAll(Priority.values());
 
         // 3.3.C. Configure tasksTableView
+        tasksTableView.setEditable(true);
+
         descriptionColumn.setCellValueFactory(new PropertyValueFactory<>("description"));
+        descriptionColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        descriptionColumn.setOnEditCommit(event -> {
+            TodoItem item = event.getRowValue();
+            item.setDescription(event.getNewValue());
+            System.out.println("Task description updated: " + item.getDescription());
+        });
+
         priorityColumn.setCellValueFactory(new PropertyValueFactory<>("priority"));
+        priorityColumn.setCellFactory(ComboBoxTableCell.forTableColumn(Priority.values()));
+        priorityColumn.setOnEditCommit(event -> {
+            TodoItem item = event.getRowValue();
+            item.setPriority(event.getNewValue());
+            System.out.println("Task priority updated: " + item.getDescription() + " to " + item.getPriority());
+        });
+
         dueDateColumn.setCellValueFactory(new PropertyValueFactory<>("dueDate"));
+        dueDateColumn.setCellFactory(TextFieldTableCell.forTableColumn(new LocalDateStringConverter()));
+        dueDateColumn.setOnEditCommit(event -> {
+            TodoItem item = event.getRowValue();
+            item.setDueDate(event.getNewValue());
+            System.out.println("Task due date updated: " + item.getDescription() + " to " + item.getDueDate());
+        });
+
         creationDateColumn.setCellValueFactory(new PropertyValueFactory<>("creationDate"));
         
         // Configure statusColumn with a CheckBox Cell Factory
+        statusColumn.setCellValueFactory(cellData -> cellData.getValue().doneProperty());
         statusColumn.setCellFactory(column -> new TableCell<TodoItem, Boolean>() {
             private final CheckBox checkBox = new CheckBox();
             {
@@ -99,7 +129,7 @@ public class MainViewController implements Initializable {
                         System.out.println("Task status changed: " + item.getDescription() + " to " + item.isDone());
                         updateSummaryLabel();
                         // Optionally re-apply filter if it depends on 'done' status
-                        if (filteredTasks != null) {
+                        if (filteredTasks != null && filteredTasks.getPredicate() != null) {
                             filteredTasks.setPredicate(filteredTasks.getPredicate());
                         }
                     }
@@ -111,9 +141,45 @@ public class MainViewController implements Initializable {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setGraphic(null);
+                    setText(null);
                 } else {
                     checkBox.setSelected(item);
                     setGraphic(checkBox);
+                    setText(null);
+                    setAlignment(javafx.geometry.Pos.CENTER);
+                }
+            }
+        });
+
+        // Configure actionsColumn with a Delete Button Cell Factory
+        actionsColumn.setCellFactory(column -> new TableCell<TodoItem, Void>() {
+            private final Button deleteButton = new Button("Delete");
+            {
+                deleteButton.setOnAction(event -> {
+                    TodoItem item = getTableView().getItems().get(getIndex());
+                    if (item != null) {
+                        Alert alert = new Alert(AlertType.CONFIRMATION);
+                        alert.setTitle("Confirm Deletion");
+                        alert.setHeaderText("Delete Task: " + item.getDescription());
+                        alert.setContentText("Are you sure you want to delete this task?");
+                        alert.showAndWait().ifPresent(response -> {
+                            if (response == javafx.scene.control.ButtonType.OK) {
+                                todoListManager.removeTask(item);
+                                updateSummaryLabel();
+                                System.out.println("Task deleted: " + item.getDescription());
+                            }
+                        });
+                    }
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(deleteButton);
                     setAlignment(javafx.geometry.Pos.CENTER);
                 }
             }
@@ -148,25 +214,38 @@ public class MainViewController implements Initializable {
         LocalDate dueDate = dueDatePicker.getValue();
 
         if (description == null || description.trim().isEmpty()) {
-            // TODO: Show an alert to the user - description cannot be empty
-            System.err.println("Task description cannot be empty.");
+            // System.err.println("Task description cannot be empty.");
+            Alert alert = new Alert(AlertType.WARNING);
+            alert.setTitle("Validation Error");
+            alert.setHeaderText(null);
+            alert.setContentText("Task description cannot be empty.");
+            alert.showAndWait();
             return;
         }
         if (priority == null) {
-            // Default to MEDIUM if not selected, or show an alert
-            priority = Priority.MEDIUM; 
-            System.out.println("Priority not selected, defaulting to MEDIUM.");
+            Alert alert = new Alert(AlertType.WARNING);
+            alert.setTitle("Validation Error");
+            alert.setHeaderText(null);
+            alert.setContentText("Please select a priority.");
+            alert.showAndWait();
+            return;
         }
-        // Due date can be null
+        if (dueDate == null) {
+            Alert alert = new Alert(AlertType.WARNING);
+            alert.setTitle("Validation Error");
+            alert.setHeaderText(null);
+            alert.setContentText("Please select a due date.");
+            alert.showAndWait();
+            return;
+        }
 
         todoListManager.addTask(description, priority, dueDate);
-        
-        descriptionTextField.clear();
-        priorityComboBox.setValue(null); // Or set to default
-        dueDatePicker.setValue(null);
 
-        updateSummaryLabel();
-        System.out.println("Task added: " + description);
+        descriptionTextField.clear();
+        priorityComboBox.setValue(null);
+        dueDatePicker.setValue(null);
+        // tasksTableView will update via the FilteredList -> SortedList
+        updateSummaryLabel(); // Update summary after adding
     }
 
     @FXML
