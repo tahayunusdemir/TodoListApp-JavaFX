@@ -7,21 +7,18 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.URL;
+import todolistapp.controller.MainViewController;
 
 public class TodoListApplication extends Application {
     @Override
     public void start(Stage primaryStage) {
         try {
-            URL fxmlUrl = getClass().getResource("view/MainView.fxml");
-            if (fxmlUrl == null) {
-                System.err.println("Cannot find FXML file: view/MainView.fxml. Check the path.");
-                // Optionally show an Alert to the user here
-                return;
-            }
-            Parent root = FXMLLoader.load(fxmlUrl);
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("view/MainView.fxml"));
+            Parent root = loader.load();
+            MainViewController controller = loader.getController();
+
             Scene scene = new Scene(root);
             
-            // Link CSS file
             URL cssUrl = getClass().getResource("view/styles.css");
             if (cssUrl != null) {
                scene.getStylesheets().add(cssUrl.toExternalForm());
@@ -32,6 +29,14 @@ public class TodoListApplication extends Application {
 
             primaryStage.setTitle("Todo List Application");
             primaryStage.setScene(scene);
+
+            primaryStage.setOnCloseRequest(event -> {
+                if (controller != null) {
+                    controller.handleAppExit();
+                }
+                System.out.println("Application is closing.");
+            });
+
             primaryStage.show();
         } catch (IOException e) {
             e.printStackTrace();

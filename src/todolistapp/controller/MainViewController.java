@@ -218,9 +218,9 @@ public class MainViewController implements Initializable {
         filterComboBox.setOnAction(event -> handleFilterTasks());
 
 
-        // 3.3.E. Load Initial Data (Persistence) - Will be called later
-        // todoListManager.loadTasks(); // Placeholder
-        updateSummaryLabel();
+        // 3.3.E. Load Initial Data (Persistence)
+        todoListManager.loadTasks(); // Load tasks from file
+        updateSummaryLabel(); // Update summary after loading
         
         System.out.println("MainViewController initialized with FXML components.");
     }    
@@ -317,11 +317,13 @@ public class MainViewController implements Initializable {
         summaryLabel.setText(pendingTasks + " pending / " + totalTasksInView + " tasks in view");
     }
 
-    // Placeholder for save on exit, to be called from TodoListApplication
-    // public void handleAppExit() {
-    //     if (todoListManager != null) {
-    //         // todoListManager.saveTasks(); // Persistence will be implemented later
-    //         System.out.println("Application exit: Tasks would be saved here.");
-    //     }
-    // }
+    // Called from TodoListApplication when the app is closing
+    public void handleAppExit() {
+        if (todoListManager != null) {
+            todoListManager.saveTasks();
+            System.out.println("Application exit: Tasks saved.");
+        } else {
+            System.out.println("Application exit: TodoListManager was null, tasks not saved.");
+        }
+    }
 } 
