@@ -3,4 +3,25 @@
     -fx-fill: gray; /* Optional: makes the text color gray for completed tasks */
 }
 
+/* Priority-based styling */
+.table-row-cell:priority-high {
+    -fx-background-color: #FFEBEE; /* Light Red */
+}
+
+.table-row-cell:priority-medium {
+    -fx-background-color: #FFF9C4; /* Light Yellow */
+}
+
+.table-row-cell:priority-low {
+    -fx-background-color: #E8F5E9; /* Light Green */
+}
+
+/* Ensure completed style takes precedence or combines well for text color */
+.table-row-cell:completed:priority-high .text,
+.table-row-cell:completed:priority-medium .text,
+.table-row-cell:completed:priority-low .text {
+    -fx-strikethrough: true;
+    -fx-fill: gray;
+}
+
 /* Add more global styles or specific component styles below as needed */ 

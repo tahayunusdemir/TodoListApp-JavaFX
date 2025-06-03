@@ -198,16 +198,42 @@ public class MainViewController implements Initializable {
         // Optional: Enable table sorting by due date by default
         // tasksTableView.getSortOrder().add(dueDateColumn);
 
-        // Add rowFactory to apply styles based on task completion
+        // Add rowFactory to apply styles based on task completion and priority
         PseudoClass completedClass = PseudoClass.getPseudoClass("completed");
+        PseudoClass highPriorityClass = PseudoClass.getPseudoClass("priority-high");
+        PseudoClass mediumPriorityClass = PseudoClass.getPseudoClass("priority-medium");
+        PseudoClass lowPriorityClass = PseudoClass.getPseudoClass("priority-low");
+
         tasksTableView.setRowFactory(tableView -> new TableRow<TodoItem>() {
             @Override
             protected void updateItem(TodoItem item, boolean empty) {
                 super.updateItem(item, empty);
+                // Reset all pseudo-classes first
+                pseudoClassStateChanged(completedClass, false);
+                pseudoClassStateChanged(highPriorityClass, false);
+                pseudoClassStateChanged(mediumPriorityClass, false);
+                pseudoClassStateChanged(lowPriorityClass, false);
+
                 if (item == null || empty) {
-                    pseudoClassStateChanged(completedClass, false);
+                    // No item, do nothing else
                 } else {
+                    // Apply completed class if necessary
                     pseudoClassStateChanged(completedClass, item.isDone());
+
+                    // Apply priority-based class
+                    if (item.getPriority() != null) {
+                        switch (item.getPriority()) {
+                            case HIGH:
+                                pseudoClassStateChanged(highPriorityClass, true);
+                                break;
+                            case MEDIUM:
+                                pseudoClassStateChanged(mediumPriorityClass, true);
+                                break;
+                            case LOW:
+                                pseudoClassStateChanged(lowPriorityClass, true);
+                                break;
+                        }
+                    }
                 }
             }
         });
