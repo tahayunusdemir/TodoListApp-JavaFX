@@ -30,9 +30,14 @@ import javafx.util.converter.LocalDateStringConverter;
 import javafx.scene.control.TableRow;
 import javafx.css.PseudoClass;
 
-
+/**
+ * Controller for the main view of the Todo List Application (MainView.fxml).
+ * Handles user interactions, manages the display of tasks, and coordinates
+ * with the {@link TodoListManager} for data operations.
+ */
 public class MainViewController implements Initializable {
 
+    //<editor-fold desc="@FXML Variables">
     @FXML
     private BorderPane rootPane;
 
@@ -77,48 +82,59 @@ public class MainViewController implements Initializable {
 
     @FXML
     private Label summaryLabel;
+    //</editor-fold>
 
     private TodoListManager todoListManager;
     private FilteredList<TodoItem> filteredTasks;
 
+    /**
+     * Initializes the controller class. This method is automatically called
+     * after the FXML file has been loaded.
+     * It sets up the model, configures UI components (ComboBoxes, TableView columns,
+     * cell factories, row factories for styling), loads initial data, and applies default filters.
+     *
+     * @param url The location used to resolve relative paths for the root object, or null if not known.
+     * @param rb The resources used to localize the root object, or null if not known.
+     */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // 3.3.A. Instantiate Model
         this.todoListManager = new TodoListManager();
 
-        // 3.3.B. Configure priorityComboBox
         priorityComboBox.getItems().setAll(Priority.values());
 
-        // 3.3.C. Configure tasksTableView
         tasksTableView.setEditable(true);
 
+        // Configure Description Column
         descriptionColumn.setCellValueFactory(new PropertyValueFactory<>("description"));
         descriptionColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         descriptionColumn.setOnEditCommit(event -> {
             TodoItem item = event.getRowValue();
             item.setDescription(event.getNewValue());
-            System.out.println("Task description updated: " + item.getDescription());
+            // todoListManager.saveTasks(); // Or a specific update method in manager
         });
 
+        // Configure Priority Column
         priorityColumn.setCellValueFactory(new PropertyValueFactory<>("priority"));
         priorityColumn.setCellFactory(ComboBoxTableCell.forTableColumn(Priority.values()));
         priorityColumn.setOnEditCommit(event -> {
             TodoItem item = event.getRowValue();
             item.setPriority(event.getNewValue());
-            System.out.println("Task priority updated: " + item.getDescription() + " to " + item.getPriority());
+            // todoListManager.saveTasks();
         });
 
+        // Configure Due Date Column
         dueDateColumn.setCellValueFactory(new PropertyValueFactory<>("dueDate"));
         dueDateColumn.setCellFactory(TextFieldTableCell.forTableColumn(new LocalDateStringConverter()));
         dueDateColumn.setOnEditCommit(event -> {
             TodoItem item = event.getRowValue();
             item.setDueDate(event.getNewValue());
-            System.out.println("Task due date updated: " + item.getDescription() + " to " + item.getDueDate());
+            // todoListManager.saveTasks();
         });
 
+        // Configure Creation Date Column (read-only)
         creationDateColumn.setCellValueFactory(new PropertyValueFactory<>("creationDate"));
         
-        // Configure statusColumn with a CheckBox Cell Factory
+        // Configure Status Column with CheckBox
         statusColumn.setCellValueFactory(cellData -> cellData.getValue().doneProperty());
         statusColumn.setCellFactory(column -> new TableCell<TodoItem, Boolean>() {
             private final CheckBox checkBox = new CheckBox();
@@ -127,14 +143,13 @@ public class MainViewController implements Initializable {
                     if (getIndex() >= 0 && getIndex() < getTableView().getItems().size()) {
                         TodoItem item = getTableView().getItems().get(getIndex());
                         item.setDone(checkBox.isSelected());
-                        // todoListManager.updateTask(item, item.getDescription(), item.getPriority(), item.getDueDate(), item.isDone()); // Or rely on property binding if active persistence
-                        System.out.println("Task status changed: " + item.getDescription() + " to " + item.isDone());
                         updateSummaryLabel();
-                        // Optionally re-apply filter if it depends on 'done' status
                         if (filteredTasks != null && filteredTasks.getPredicate() != null) {
-                            filteredTasks.setPredicate(filteredTasks.getPredicate());
-                            tasksTableView.refresh();
+                            // Re-apply predicate to refresh view if filtering is active
+                            filteredTasks.setPredicate(filteredTasks.getPredicate()); 
                         }
+                        tasksTableView.refresh(); // Refresh row to apply CSS changes
+                        // todoListManager.saveTasks();
                     }
                 });
             }
@@ -145,7 +160,6 @@ public class MainViewController implements Initializable {
                 if (empty || item == null) {
                     setGraphic(null);
                     setText(null);
-                    pseudoClassStateChanged(PseudoClass.getPseudoClass("completed"), false);
                 } else {
                     checkBox.setSelected(item);
                     setGraphic(checkBox);
@@ -155,10 +169,12 @@ public class MainViewController implements Initializable {
             }
         });
 
-        // Configure actionsColumn with a Delete Button Cell Factory
+        // Configure Actions Column with Delete Button
         actionsColumn.setCellFactory(column -> new TableCell<TodoItem, Void>() {
             private final Button deleteButton = new Button("Delete");
             {
+                // Apply a style class for specific CSS styling if needed
+                // deleteButton.getStyleClass().add("action-button-delete"); 
                 deleteButton.setOnAction(event -> {
                     TodoItem item = getTableView().getItems().get(getIndex());
                     if (item != null) {
@@ -170,7 +186,7 @@ public class MainViewController implements Initializable {
                             if (response == javafx.scene.control.ButtonType.OK) {
                                 todoListManager.removeTask(item);
                                 updateSummaryLabel();
-                                System.out.println("Task deleted: " + item.getDescription());
+                                // todoListManager.saveTasks();
                             }
                         });
                     }
@@ -189,28 +205,45 @@ public class MainViewController implements Initializable {
             }
         });
 
-        // Link TableView to TodoListManager's ObservableList (wrapped in FilteredList and SortedList)
-        filteredTasks = new FilteredList<>(todoListManager.getTasks(), p -> true); // Show all initially
+        // Setup FilteredList and SortedList for the TableView
+        filteredTasks = new FilteredList<>(todoListManager.getTasks(), p -> true); 
         SortedList<TodoItem> sortedTasks = new SortedList<>(filteredTasks);
         sortedTasks.comparatorProperty().bind(tasksTableView.comparatorProperty());
         tasksTableView.setItems(sortedTasks);
         
-        // Optional: Enable table sorting by due date by default
-        // tasksTableView.getSortOrder().add(dueDateColumn);
+        // Set up RowFactory for CSS pseudo-classes (completed, priority, due status)
+        setupRowStyling();
 
-        // Add rowFactory to apply styles based on task completion and priority
-        PseudoClass completedClass = PseudoClass.getPseudoClass("completed");
-        PseudoClass highPriorityClass = PseudoClass.getPseudoClass("priority-high");
-        PseudoClass mediumPriorityClass = PseudoClass.getPseudoClass("priority-medium");
-        PseudoClass lowPriorityClass = PseudoClass.getPseudoClass("priority-low");
-        PseudoClass overdueClass = PseudoClass.getPseudoClass("overdue");
-        PseudoClass dueSoonClass = PseudoClass.getPseudoClass("due-soon");
+        // Configure Filter ComboBox
+        filterComboBox.getItems().addAll("All", "Active", "Completed");
+        filterComboBox.setValue("All"); 
+        filterComboBox.setOnAction(event -> handleFilterTasks());
+
+        // Load tasks from persistence layer
+        todoListManager.loadTasks(); 
+        updateSummaryLabel(); 
+        
+        // Initial log to confirm initialization
+        // System.out.println("MainViewController initialized."); // Removed - redundant
+    }
+
+    /**
+     * Sets up the row factory for the tasks TableView to apply dynamic CSS styling
+     * based on task properties like completion status, priority, and due date.
+     */
+    private void setupRowStyling() {
+        final PseudoClass completedClass = PseudoClass.getPseudoClass("completed");
+        final PseudoClass highPriorityClass = PseudoClass.getPseudoClass("priority-high");
+        final PseudoClass mediumPriorityClass = PseudoClass.getPseudoClass("priority-medium");
+        final PseudoClass lowPriorityClass = PseudoClass.getPseudoClass("priority-low");
+        final PseudoClass overdueClass = PseudoClass.getPseudoClass("overdue");
+        final PseudoClass dueSoonClass = PseudoClass.getPseudoClass("due-soon");
 
         tasksTableView.setRowFactory(tableView -> new TableRow<TodoItem>() {
             @Override
             protected void updateItem(TodoItem item, boolean empty) {
                 super.updateItem(item, empty);
-                // Reset all pseudo-classes first
+                // Reset all pseudo-classes first for the row
                 pseudoClassStateChanged(completedClass, false);
                 pseudoClassStateChanged(highPriorityClass, false);
                 pseudoClassStateChanged(mediumPriorityClass, false);
@@ -218,156 +251,160 @@ public class MainViewController implements Initializable {
                 pseudoClassStateChanged(overdueClass, false);
                 pseudoClassStateChanged(dueSoonClass, false);
 
-                if (item == null || empty) {
-                    // No item, do nothing else
-                } else {
-                    // Apply completed class if necessary
+                if (item != null && !empty) {
                     boolean isCompleted = item.isDone();
                     pseudoClassStateChanged(completedClass, isCompleted);
 
-                    // Apply priority-based class (can be set even if completed, CSS handles text)
                     if (item.getPriority() != null) {
                         switch (item.getPriority()) {
-                            case HIGH:
-                                pseudoClassStateChanged(highPriorityClass, true);
-                                break;
-                            case MEDIUM:
-                                pseudoClassStateChanged(mediumPriorityClass, true);
-                                break;
-                            case LOW:
-                                pseudoClassStateChanged(lowPriorityClass, true);
-                                break;
+                            case HIGH: pseudoClassStateChanged(highPriorityClass, true); break;
+                            case MEDIUM: pseudoClassStateChanged(mediumPriorityClass, true); break;
+                            case LOW: pseudoClassStateChanged(lowPriorityClass, true); break;
                         }
                     }
 
-                    // Apply due-date based class ONLY if not completed
-                    if (!isCompleted) {
-                        LocalDate dueDate = item.getDueDate();
-                        if (dueDate != null) {
-                            LocalDate today = LocalDate.now();
-                            if (dueDate.isBefore(today)) {
-                                pseudoClassStateChanged(overdueClass, true);
-                            } else if (!dueDate.isAfter(today.plusDays(3))) { // Due today or in 1, 2, or 3 days.
-                                pseudoClassStateChanged(dueSoonClass, true);
-                            }
+                    if (!isCompleted && item.getDueDate() != null) {
+                        LocalDate today = LocalDate.now();
+                        if (item.getDueDate().isBefore(today)) {
+                            pseudoClassStateChanged(overdueClass, true);
+                        } else if (!item.getDueDate().isAfter(today.plusDays(3))) { 
+                            pseudoClassStateChanged(dueSoonClass, true);
                         }
                     }
+                } else {
+                    // Ensure no styles are applied to empty rows
+                    setStyle("");
                 }
             }
         });
+    }
 
-        // 3.3.D. (Optional) Configure filterComboBox
-        filterComboBox.getItems().addAll("All", "Active", "Completed");
-        filterComboBox.setValue("All"); // Default filter
-        filterComboBox.setOnAction(event -> handleFilterTasks());
-
-
-        // 3.3.E. Load Initial Data (Persistence)
-        todoListManager.loadTasks(); // Load tasks from file
-        updateSummaryLabel(); // Update summary after loading
-        
-        System.out.println("MainViewController initialized with FXML components.");
-    }    
-
+    /**
+     * Handles the "Add Task" button action. Validates input fields (description, priority, due date),
+     * adds a new task to the {@link TodoListManager} if valid, clears input fields,
+     * and updates the summary label.
+     *
+     * @param event The ActionEvent triggered by the button click.
+     */
     @FXML
     private void handleAddTask(ActionEvent event) {
         String description = descriptionTextField.getText();
         Priority priority = priorityComboBox.getValue();
         LocalDate dueDate = dueDatePicker.getValue();
 
+        // Input Validation
         if (description == null || description.trim().isEmpty()) {
-            // System.err.println("Task description cannot be empty.");
-            Alert alert = new Alert(AlertType.WARNING);
-            alert.setTitle("Validation Error");
-            alert.setHeaderText(null);
-            alert.setContentText("Task description cannot be empty.");
-            alert.showAndWait();
+            showAlert(AlertType.WARNING, "Validation Error", "Task description cannot be empty.");
             return;
         }
         if (priority == null) {
-            Alert alert = new Alert(AlertType.WARNING);
-            alert.setTitle("Validation Error");
-            alert.setHeaderText(null);
-            alert.setContentText("Please select a priority.");
-            alert.showAndWait();
+            showAlert(AlertType.WARNING, "Validation Error", "Please select a priority.");
             return;
         }
         if (dueDate == null) {
-            Alert alert = new Alert(AlertType.WARNING);
-            alert.setTitle("Validation Error");
-            alert.setHeaderText(null);
-            alert.setContentText("Please select a due date.");
-            alert.showAndWait();
+            showAlert(AlertType.WARNING, "Validation Error", "Please select a due date.");
             return;
         }
 
         todoListManager.addTask(description, priority, dueDate);
+        // todoListManager.saveTasks(); // Save if save-on-change is active
 
         descriptionTextField.clear();
         priorityComboBox.setValue(null);
         dueDatePicker.setValue(null);
-        // tasksTableView will update via the FilteredList -> SortedList
-        updateSummaryLabel(); // Update summary after adding
+        updateSummaryLabel();
     }
 
+    /**
+     * Handles the "Delete Completed" button action.
+     * Removes all tasks marked as done from the {@link TodoListManager}
+     * and updates the summary label.
+     *
+     * @param event The ActionEvent triggered by the button click.
+     */
     @FXML
     private void handleDeleteCompleted(ActionEvent event) {
-        // Iterate backwards or create a list of items to remove to avoid ConcurrentModificationException
         java.util.List<TodoItem> toRemove = new java.util.ArrayList<>();
-        for (TodoItem item : todoListManager.getTasks()) {
+        for (TodoItem item : todoListManager.getTasks()) { // Iterate over original list for collection
             if (item.isDone()) {
                 toRemove.add(item);
             }
         }
         if (!toRemove.isEmpty()) {
-            // Optional: Confirm deletion
-            // Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Delete all completed tasks?", ButtonType.YES, ButtonType.NO);
-            // alert.showAndWait().ifPresent(response -> {
-            //     if (response == ButtonType.YES) {
-            //         toRemove.forEach(todoListManager::removeTask);
-            //         updateSummaryLabel();
-            //         System.out.println(toRemove.size() + " completed tasks deleted.");
-            //     }
+            // Optional: Confirmation Dialog before deleting multiple items
+            // Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION, "Delete all " + toRemove.size() + " completed tasks?", javafx.scene.control.ButtonType.YES, javafx.scene.control.ButtonType.NO);
+            // confirmAlert.showAndWait().ifPresent(response -> {
+            // if (response == javafx.scene.control.ButtonType.YES) {
+            // toRemove.forEach(todoListManager::removeTask); // This modifies the underlying list of filteredTasks
+            // updateSummaryLabel();
+            // todoListManager.saveTasks(); 
+            // }
             // });
-            toRemove.forEach(todoListManager::removeTask); // Direct removal for now
+            toRemove.forEach(todoListManager::removeTask); 
             updateSummaryLabel();
-            System.out.println(toRemove.size() + " completed tasks deleted.");
+            // todoListManager.saveTasks(); 
         } else {
-            System.out.println("No completed tasks to delete.");
+            showAlert(AlertType.INFORMATION, "No Tasks", "No completed tasks to delete.");
         }
     }
     
+    /**
+     * Handles changes in the filter ComboBox selection.
+     * Updates the predicate of the {@link FilteredList} to show tasks
+     * based on the selected filter ("All", "Active", "Completed")
+     * and updates the summary label.
+     */
     private void handleFilterTasks() {
         String filterType = filterComboBox.getValue();
-        if (filterType == null) filterType = "All";
+        if (filterType == null) filterType = "All"; // Default to "All" if null
 
-        final String selectedFilter = filterType; // effectively final for lambda
+        final String selectedFilter = filterType; 
         filteredTasks.setPredicate(item -> {
             if (selectedFilter.equals("Completed")) {
                 return item.isDone();
             } else if (selectedFilter.equals("Active")) {
                 return !item.isDone();
             }
-            return true; // "All" or default
+            return true; // "All"
         });
         updateSummaryLabel();
     }
 
+    /**
+     * Updates the summary label to display the count of pending tasks
+     * and the total number of tasks currently visible in the TableView (respecting filters).
+     */
     private void updateSummaryLabel() {
         long pendingTasks = filteredTasks.stream().filter(item -> !item.isDone()).count();
         long totalTasksInView = filteredTasks.size();
-        // Or use todoListManager.getTasks().size() for total regardless of filter
-        // long totalTasks = todoListManager.getTasks().size();
         summaryLabel.setText(pendingTasks + " pending / " + totalTasksInView + " tasks in view");
     }
 
-    // Called from TodoListApplication when the app is closing
+    /**
+     * Helper method to display an Alert dialog.
+     * @param alertType The type of the alert (e.g., WARNING, INFORMATION).
+     * @param title The title of the alert window.
+     * @param content The message content of the alert.
+     */
+    private void showAlert(AlertType alertType, String title, String content) {
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    /**
+     * Handles application exit operations. This method is intended to be called
+     * by the main application class when the application is closing.
+     * It triggers the saving of tasks through the {@link TodoListManager}.
+     */
     public void handleAppExit() {
         if (todoListManager != null) {
             todoListManager.saveTasks();
-            System.out.println("Application exit: Tasks saved.");
+            System.out.println("MainViewController: Tasks saved on application exit.");
         } else {
-            System.out.println("Application exit: TodoListManager was null, tasks not saved.");
+            System.err.println("MainViewController: TodoListManager was null during app exit, tasks not saved.");
         }
     }
 } 
