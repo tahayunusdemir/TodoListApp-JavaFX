@@ -1,5 +1,9 @@
 # Todo List Application (JavaFX & MVC)
 
+Here is an example screenshot of the Todo List Application in action:
+
+![Todo List Screenshot](images/screenshot.png)
+
 ## 1. Project Title and Authors
 
 *   **Project Title**: Todo List Application

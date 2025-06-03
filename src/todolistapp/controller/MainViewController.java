@@ -237,7 +237,6 @@ public class MainViewController implements Initializable {
         final PseudoClass mediumPriorityClass = PseudoClass.getPseudoClass("priority-medium");
         final PseudoClass lowPriorityClass = PseudoClass.getPseudoClass("priority-low");
         final PseudoClass overdueClass = PseudoClass.getPseudoClass("overdue");
-        final PseudoClass dueSoonClass = PseudoClass.getPseudoClass("due-soon");
 
         tasksTableView.setRowFactory(tableView -> new TableRow<TodoItem>() {
             @Override
@@ -249,7 +248,6 @@ public class MainViewController implements Initializable {
                 pseudoClassStateChanged(mediumPriorityClass, false);
                 pseudoClassStateChanged(lowPriorityClass, false);
                 pseudoClassStateChanged(overdueClass, false);
-                pseudoClassStateChanged(dueSoonClass, false);
 
                 if (item != null && !empty) {
                     boolean isCompleted = item.isDone();
@@ -267,8 +265,6 @@ public class MainViewController implements Initializable {
                         LocalDate today = LocalDate.now();
                         if (item.getDueDate().isBefore(today)) {
                             pseudoClassStateChanged(overdueClass, true);
-                        } else if (!item.getDueDate().isAfter(today.plusDays(3))) { 
-                            pseudoClassStateChanged(dueSoonClass, true);
                         }
                     }
                 } else {

@@ -36,13 +36,8 @@
     -fx-font-weight: bold;
 }
 
-.table-row-cell:due-soon .text {
-    -fx-fill: #F57C00; /* Darker Orange */
-}
-
 /* Ensure completed style (gray, strikethrough) overrides due date colors if a task is marked completed */
-.table-row-cell:completed:overdue .text,
-.table-row-cell:completed:due-soon .text {
+.table-row-cell:completed:overdue .text {
     -fx-strikethrough: true;
     -fx-fill: gray;
     -fx-font-weight: normal; /* Reset bold if it was overdue */
@@ -102,6 +97,18 @@
 }
 #deleteCompletedButton:hover {
     -fx-background-color: #e53935;
+}
+
+/* Action button in table row for individual delete */
+.table-row-cell .button { /* More specific selector for buttons inside table cells */
+    -fx-background-color: #E53935; /* A slightly more prominent red */
+    -fx-text-fill: white;
+    -fx-padding: 3px 8px; /* Adjust padding for a better look */
+    -fx-font-size: 12px; /* Slightly smaller font if needed */
+}
+
+.table-row-cell .button:hover {
+    -fx-background-color: #D32F2F; /* Darker red on hover */
 }
 
 .text-field,
