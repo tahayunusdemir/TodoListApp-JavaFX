@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.control.Label?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="todolistapp.controller.MainViewController" prefHeight="400.0" prefWidth="600.0">
+    <center>
+        <Label text="Todo List Application - Main View"/>
+    </center>
+</BorderPane> 
