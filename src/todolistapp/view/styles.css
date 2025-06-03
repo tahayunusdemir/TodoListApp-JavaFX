@@ -30,6 +30,24 @@
     -fx-fill: gray;
 }
 
+/* Due Date Specific Styling (for non-completed tasks) */
+.table-row-cell:overdue .text {
+    -fx-fill: #D32F2F; /* Darker Red */
+    -fx-font-weight: bold;
+}
+
+.table-row-cell:due-soon .text {
+    -fx-fill: #F57C00; /* Darker Orange */
+}
+
+/* Ensure completed style (gray, strikethrough) overrides due date colors if a task is marked completed */
+.table-row-cell:completed:overdue .text,
+.table-row-cell:completed:due-soon .text {
+    -fx-strikethrough: true;
+    -fx-fill: gray;
+    -fx-font-weight: normal; /* Reset bold if it was overdue */
+}
+
 /* Input Area Styles */
 #inputAreaHBox {
     -fx-padding: 15px;

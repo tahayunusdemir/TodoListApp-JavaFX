@@ -203,6 +203,8 @@ public class MainViewController implements Initializable {
         PseudoClass highPriorityClass = PseudoClass.getPseudoClass("priority-high");
         PseudoClass mediumPriorityClass = PseudoClass.getPseudoClass("priority-medium");
         PseudoClass lowPriorityClass = PseudoClass.getPseudoClass("priority-low");
+        PseudoClass overdueClass = PseudoClass.getPseudoClass("overdue");
+        PseudoClass dueSoonClass = PseudoClass.getPseudoClass("due-soon");
 
         tasksTableView.setRowFactory(tableView -> new TableRow<TodoItem>() {
             @Override
@@ -213,14 +215,17 @@ public class MainViewController implements Initializable {
                 pseudoClassStateChanged(highPriorityClass, false);
                 pseudoClassStateChanged(mediumPriorityClass, false);
                 pseudoClassStateChanged(lowPriorityClass, false);
+                pseudoClassStateChanged(overdueClass, false);
+                pseudoClassStateChanged(dueSoonClass, false);
 
                 if (item == null || empty) {
                     // No item, do nothing else
                 } else {
                     // Apply completed class if necessary
-                    pseudoClassStateChanged(completedClass, item.isDone());
+                    boolean isCompleted = item.isDone();
+                    pseudoClassStateChanged(completedClass, isCompleted);
 
-                    // Apply priority-based class
+                    // Apply priority-based class (can be set even if completed, CSS handles text)
                     if (item.getPriority() != null) {
                         switch (item.getPriority()) {
                             case HIGH:
@@ -232,6 +237,19 @@ public class MainViewController implements Initializable {
                             case LOW:
                                 pseudoClassStateChanged(lowPriorityClass, true);
                                 break;
+                        }
+                    }
+
+                    // Apply due-date based class ONLY if not completed
+                    if (!isCompleted) {
+                        LocalDate dueDate = item.getDueDate();
+                        if (dueDate != null) {
+                            LocalDate today = LocalDate.now();
+                            if (dueDate.isBefore(today)) {
+                                pseudoClassStateChanged(overdueClass, true);
+                            } else if (!dueDate.isAfter(today.plusDays(3))) { // Due today or in 1, 2, or 3 days.
+                                pseudoClassStateChanged(dueSoonClass, true);
+                            }
                         }
                     }
                 }
