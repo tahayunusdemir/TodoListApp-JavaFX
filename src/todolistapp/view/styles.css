@@ -1,3 +1,9 @@
+.root {
+    -fx-font-family: "System"; /* Uses the default system font */
+    -fx-font-size: 13px; /* A common base font size */
+    -fx-background-color: #F4F4F4; /* Light gray background for the whole app */
+}
+
 .table-row-cell:completed .text {
     -fx-strikethrough: true;
     -fx-fill: gray; /* Optional: makes the text color gray for completed tasks */
@@ -22,6 +28,153 @@
 .table-row-cell:completed:priority-low .text {
     -fx-strikethrough: true;
     -fx-fill: gray;
+}
+
+/* Input Area Styles */
+#inputAreaHBox {
+    -fx-padding: 15px;
+    -fx-spacing: 10px;
+    -fx-border-color: #E0E0E0 transparent transparent transparent; /* Top border */
+    -fx-border-width: 1px;
+    -fx-background-color: #FFFFFF; /* White background for the input area */
+}
+
+#inputAreaHBox .text-field,
+#inputAreaHBox .combo-box,
+#inputAreaHBox .date-picker {
+    -fx-pref-height: 30px;
+    -fx-font-size: 13px;
+}
+
+#inputAreaHBox .button {
+    -fx-pref-height: 30px;
+    -fx-font-size: 13px;
+    -fx-background-color: #4CAF50; /* Green */
+    -fx-text-fill: white;
+    -fx-background-radius: 4px;
+}
+
+#inputAreaHBox .button:hover {
+    -fx-background-color: #45a049;
+}
+
+/* General Control Styles */
+.button {
+    -fx-pref-height: 30px;
+    -fx-font-size: 13px;
+    -fx-background-radius: 4px;
+    -fx-text-fill: white;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 5, 0, 0, 1); /* Subtle shadow */
+}
+
+.button:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 5, 0, 0, 2); /* Enhanced shadow on hover */
+}
+
+/* Specific button styling */
+#addTaskButton { /* Already styled above, but can be fine-tuned if needed */
+    -fx-background-color: #4CAF50; /* Green */
+}
+#addTaskButton:hover {
+    -fx-background-color: #45a049;
+}
+
+#deleteCompletedButton {
+    -fx-background-color: #f44336; /* Red */
+}
+#deleteCompletedButton:hover {
+    -fx-background-color: #e53935;
+}
+
+.text-field,
+.combo-box .text-field, /* For ComboBox text area */
+.date-picker .text-field /* For DatePicker text area */ {
+    -fx-background-radius: 4px;
+    -fx-border-radius: 4px;
+    -fx-border-color: #BDBDBD; /* Light gray border */
+    -fx-border-width: 1px;
+    -fx-padding: 5px;
+}
+
+.text-field:focused,
+.combo-box:focused .text-field,
+.date-picker:focused .text-field {
+    -fx-border-color: #2196F3; /* Blue border on focus */
+    -fx-effect: dropshadow(gaussian, rgba(33,150,243,0.4), 5, 0, 0, 1);
+}
+
+.combo-box-base {
+    -fx-background-radius: 4px;
+    -fx-border-radius: 4px;
+    -fx-border-color: #BDBDBD;
+    -fx-border-width: 1px;
+}
+
+.combo-box-base:focused {
+     -fx-border-color: #2196F3;
+     -fx-effect: dropshadow(gaussian, rgba(33,150,243,0.4), 5, 0, 0, 1);
+}
+
+.date-picker > .arrow-button > .arrow {
+    -fx-background-color: #545454;
+}
+
+/* TableView Styles */
+.table-view {
+    -fx-border-color: #E0E0E0;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-selection-bar: #AED581; /* Light green for selection */
+    -fx-selection-bar-text: black;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #EEEEEE; /* Light gray for header background */
+    -fx-border-color: transparent #E0E0E0 transparent transparent; /* Right border for headers */
+    -fx-border-width: 0 1 0 0;
+}
+
+.table-view .column-header {
+    -fx-font-weight: bold;
+    -fx-size: 14px;
+    -fx-padding: 8px;
+    -fx-text-fill: #333333;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #333333;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.table-view .table-cell {
+    -fx-padding: 8px;
+    -fx-border-color: transparent #F0F0F0 transparent transparent; /* Light right border for cells */
+    -fx-border-width: 0 1 0 0;
+}
+
+.table-view .placeholder {
+    -fx-text-fill: #757575;
+    -fx-font-style: italic;
+}
+
+/* Filter Area Styles */
+#filterAreaHBox {
+    -fx-padding: 10px 15px; /* Adjusted padding */
+    -fx-spacing: 10px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-border-color: #E0E0E0 transparent transparent transparent; /* Top border */
+    -fx-border-width: 1px;
+    -fx-background-color: #FFFFFF; /* White background for the filter area */
+}
+
+#filterAreaHBox .label {
+    -fx-font-size: 13px;
+    -fx-text-fill: #333333;
+}
+
+#filterAreaHBox .combo-box {
+    -fx-pref-height: 30px;
+    -fx-font-size: 13px;
 }
 
 /* Add more global styles or specific component styles below as needed */ 
