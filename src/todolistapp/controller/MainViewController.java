@@ -27,6 +27,8 @@ import javafx.collections.transformation.SortedList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.util.converter.LocalDateStringConverter;
+import javafx.scene.control.TableRow;
+import javafx.css.PseudoClass;
 
 
 public class MainViewController implements Initializable {
@@ -131,6 +133,7 @@ public class MainViewController implements Initializable {
                         // Optionally re-apply filter if it depends on 'done' status
                         if (filteredTasks != null && filteredTasks.getPredicate() != null) {
                             filteredTasks.setPredicate(filteredTasks.getPredicate());
+                            tasksTableView.refresh();
                         }
                     }
                 });
@@ -142,6 +145,7 @@ public class MainViewController implements Initializable {
                 if (empty || item == null) {
                     setGraphic(null);
                     setText(null);
+                    pseudoClassStateChanged(PseudoClass.getPseudoClass("completed"), false);
                 } else {
                     checkBox.setSelected(item);
                     setGraphic(checkBox);
@@ -193,6 +197,20 @@ public class MainViewController implements Initializable {
         
         // Optional: Enable table sorting by due date by default
         // tasksTableView.getSortOrder().add(dueDateColumn);
+
+        // Add rowFactory to apply styles based on task completion
+        PseudoClass completedClass = PseudoClass.getPseudoClass("completed");
+        tasksTableView.setRowFactory(tableView -> new TableRow<TodoItem>() {
+            @Override
+            protected void updateItem(TodoItem item, boolean empty) {
+                super.updateItem(item, empty);
+                if (item == null || empty) {
+                    pseudoClassStateChanged(completedClass, false);
+                } else {
+                    pseudoClassStateChanged(completedClass, item.isDone());
+                }
+            }
+        });
 
         // 3.3.D. (Optional) Configure filterComboBox
         filterComboBox.getItems().addAll("All", "Active", "Completed");

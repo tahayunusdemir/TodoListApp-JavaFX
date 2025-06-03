@@ -1,0 +1,6 @@
+.table-row-cell:completed .text {
+    -fx-strikethrough: true;
+    -fx-fill: gray; /* Optional: makes the text color gray for completed tasks */
+}
+
+/* Add more global styles or specific component styles below as needed */ 
